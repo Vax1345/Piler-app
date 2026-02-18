@@ -1,0 +1,25 @@
+--- PROJECT CONFIGURATION ---
+
+PROJECT ID: (השם של הפרויקט בגוגל, מופיע למעלה משמאל)
+
+--- AGENT 1: NOA (המטפלת) ---
+AGENT APP NAME: Agent_Noa
+API KEY: (הדבק כאן את המפתח הארוך)
+VOICE CONFIG: Leda / Speed 1.0 / Style: Relaxed
+
+--- AGENT 2: FOCUS (המאמן) ---
+AGENT APP NAME: Agent_Focus
+API KEY: (הדבק כאן את המפתח השני)
+VOICE CONFIG: Male (Alnilam) / Speed 1.25 / Style: Aggressive
+
+--- AGENT 3: ADLER (הסמכות) ---
+AGENT APP NAME: Agent_Adler
+API KEY: (הדבק כאן את המפתח השלישי)
+VOICE CONFIG: Male (Alnilam) / Speed 1.0 / Style: Grave
+אדלר
+Puck (Male)
+Speed 1
+Volume gain
+ נועה
+-1.5
+LEDA 

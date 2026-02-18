@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CleanStep - Prof. Adler</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Heebo', sans-serif; background-color: #0f172a; margin: 0; height: 100dvh; overflow: hidden; }
+        .messages-area::-webkit-scrollbar { width: 0px; }
+    </style>
+</head>
+<body>
+    <div id="root" class="h-full"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const Chat = () => {
+            const [messages, setMessages] = useState(() => {
+                const saved = localStorage.getItem('adler_history');
+                return saved ? JSON.parse(saved) : [
+                    { role: 'assistant', content: "דני, אני כאן. תסתכל לי בעיניים. מה קורה עכשיו?", timestamp: new Date() }
+                ];
+            });
+            const [input, setInput] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const messagesEndRef = useRef(null);
+
+            useEffect(() => {
+                localStorage.setItem('adler_history', JSON.stringify(messages));
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, [messages]);
+
+            const handleSend = async () => {
+                if (!input.trim() || isLoading) return;
+                const userMsg = { role: 'user', content: input, timestamp: new Date() };
+                setMessages(prev => [...prev, userMsg]);
+                setInput('');
+                setIsLoading(true);
+
+                // --- הדבק את ה-API KEY שלך כאן ---
+                const API_KEY = "YOUR_API_KEY_HERE"; 
+                const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+                try {
+                    const historyForAPI = messages.slice(-10).map(m => ({
+                        role: m.role === 'assistant' ? 'model' : 'user',
+                        parts: [{ text: m.content }]
+                    }));
+
+                    const systemInstruction = "אתה פרופ' אדלר. מנטור קשוח למכורים להימורים. דבר קצר (2-3 משפטים). תן פקודה פיזית מיידית. הפרד בין האדם למחלה ('זה השקר מדבר').";
+
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [...historyForAPI, { role: 'user', parts: [{ text: input }] }],
+                            systemInstruction: { parts: [{ text: systemInstruction }] }
+                        })
+                    });
+
+                    const data = await response.json();
+                    const adlerText = data.candidates[0].content.parts[0].text;
+                    setMessages(prev => [...prev, { role: 'assistant', content: adlerText, timestamp: new Date() }]);
+                } catch (e) {
+                    setMessages(prev => [...prev, { role: 'assistant', content: "תקלה בחיבור. תנשום עמוק ותנסה שוב." }]);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            // פונקציות הגיבוי החדשות
+            const exportData = () => {
+                const dataStr = JSON.stringify(messages);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                const exportFileDefaultName = 'adler_backup.json';
+                
+                // יצירת קישור להורדה אוטומטית של הקובץ
+                let linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                alert("קובץ הגיבוי ירד. שמור אותו ב-Google Drive שלך.");
+            };
+
+            const importData = () => {
+                const backup = prompt("הדבק כאן את תוכן קובץ הגיבוי (הטקסט):");
+                if (backup) {
+                    try {
+                        const parsed = JSON.parse(backup);
+                        setMessages(parsed);
+                        alert("השיחה שוחזרה בהצלחה!");
+                    } catch (e) {
+                        alert("שגיאה: הקוד שהדבקת לא תקין.");
+                    }
+                }
+            };
+
+            return (
+                <div className="flex flex-col h-full bg-slate-900 max-w-md mx-auto">
+                    {/* Header עם כפתור גיבוי */}
+                    <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 backdrop-blur-md">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center font-bold text-white">א</div>
+                            <h2 className="text-white font-bold">פרופ' אדלר</h2>
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={exportData} title="גיבוי" className="text-slate-400 text-xl">💾</button>
+                            <button onClick={importData} title="שחזור" className="text-slate-400 text-xl">🔄</button>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 messages-area">
+                        {messages.map((m, i) => (
+                            <div key={i} className={`flex ${m.role === 'user' ? 'justify-start' : 'justify-end'}`}>
+                                <div className={`p-3 rounded-2xl max-w-[85%] text-sm ${m.role === 'user' ? 'bg-slate-800 text-slate-200 rounded-tr-none' : 'bg-teal-600 text-white shadow-lg rounded-tl-none'}`}>
+                                    {m.content}
+                                </div>
+                            </div>
+                        ))}
+                        {isLoading && <div className="text-teal-500 text-xs animate-pulse font-bold">אדלר חושב...</div>}
+                        <div ref={messagesEndRef} />
+                    </div>
+
+                    <div className="p-4 bg-slate-900 border-t border-slate-800">
+                        <div className="flex gap-2">
+                            <input 
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                                placeholder="דבר עם אדלר..."
+                                className="flex-1 bg-slate-800 text-white p-3 rounded-xl outline-none"
+                            />
+                            <button onClick={handleSend} className="bg-teal-600 text-white p-3 rounded-xl">➔</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Chat />);
+    </script>
+</body>
+</html>
