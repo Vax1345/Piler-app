@@ -1,7 +1,7 @@
 [build]
   base = "client"
   command = "npm install && npx vite build"
-  publish = "dist/public"
+  publish = "../dist/public"
 
 [[redirects]]
   from = "/*"
