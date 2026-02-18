@@ -1,5 +1,5 @@
 [build]
-  command = "npm install && npx vite build"
+  command = "npm install && npx vite build --config vite.config.netlify.ts"
   publish = "dist/public"
 
 [[redirects]]
