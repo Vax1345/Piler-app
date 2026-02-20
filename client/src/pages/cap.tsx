@@ -818,6 +818,10 @@ export default function CapPage() {
     setHistory(updated); saveHistory(updated);
   };
 
+  const clearAllHistory = () => {
+    setHistory([]); saveHistory([]);
+  };
+
   const recordProgress = audioRecordingTime / MAX_RECORD_SECONDS;
   const circumference = 2 * Math.PI * 48;
 
@@ -1094,6 +1098,13 @@ export default function CapPage() {
                       <div className="pr-7 space-y-1.5 py-1">
                         {history.length === 0 && (
                           <p className="text-[11px] text-neutral-600 px-3 py-2">אין היסטוריה עדיין</p>
+                        )}
+                        {history.length > 0 && (
+                          <div className="flex justify-end px-3 pb-1">
+                            <button onClick={clearAllHistory} className="text-[10px] text-red-500/70 hover:text-red-400 transition-colors" data-testid="button-clear-all-history">
+                              נקה הכל
+                            </button>
+                          </div>
                         )}
                         {history.slice(0, 10).map((entry) => {
                           const tabInfo = TAB_CONFIG.find(t => t.id === entry.category);
